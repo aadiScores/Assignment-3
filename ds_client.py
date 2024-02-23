@@ -58,14 +58,55 @@ def send(server:str, port:int, username:str, password:str, message:str, bio:str=
   :param message: The message to be sent to the server.
   :param bio: Optional, a bio for the user.
   '''
-  
-  # Establish Connection
-  client_socket = create_connection(server, port)
+  try:
+    # Establish Connection
+    client_socket = create_connection(server, port)
+    send_stream = client_socket.makefile('w')
+    recv_stream = client_socket.makefile('r')
 
-  # Prepare the data
-  data_to_send = prepare_data(username, password, message, bio)
+    # Prepare the data
+    data_to_send = prepare_data(username, password, message, bio)
 
+    # Send the data
+    send_stream.write(data_to_send + '\r\n')
+    send_stream.flush()
+
+    # Receive the response
+    response = recv_stream.readline()
+    #print(response)  # For debugging purposes
+
+    # Process the response
+    try:
+      
+      # Convert the response from JSON format to a Python dictionary
+      response_dict = json.loads(response)
+
+      # Check the type of response recieved
+      if "response" in response_dict:
+        
+        if response_dict["response"]["type"] == "ok":
+          print("Operation was succsessful")
+          return True
+        
+        elif response_dict["response"]["type"] == "error":
+            # You can also log or print the error message if needed
+            print(f"Error from server: {response_dict['response']['message']}")
+            return False
+      
+      else:
+        print("Unexpected response format.")
+        return False
+    
+    except json.JSONDecodeError:
+      print("Failed to decode JSON response.")
+      return False
+
+  except Exception as e:
+    print(f"An error occurred: {e}")
+    return False
   
+  finally:
+    close_connection(client_socket)
 
   # #TODO: return either True or False depending on results of required operation
   # return 
