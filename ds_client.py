@@ -29,7 +29,7 @@ def prepare_data(username, password, message=None, bio=None):
   '''
   Prepare JSON data for sending
   '''
-  data_dict = {"username": username, "password": password}
+  data_dict = {"join": {"username": username, "password": password, "token": ""}}
   
   # checks if there is a message
   if message:
@@ -73,7 +73,7 @@ def send(server:str, port:int, username:str, password:str, message:str, bio:str=
 
     # Receive the response
     response = recv_stream.readline()
-    #print(response)  # For debugging purposes
+    #print("Raw response:", response)  # For debugging purposes
 
     # Process the response
     try:
@@ -110,3 +110,5 @@ def send(server:str, port:int, username:str, password:str, message:str, bio:str=
 
   # #TODO: return either True or False depending on results of required operation
   # return 
+
+send("168.235.86.101", 3021, "Aadi", "shank", "hello")
