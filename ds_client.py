@@ -7,8 +7,9 @@
 # 75948470
 import socket
 import json
-from ds_protocol import extract_json
 import time
+from ds_protocol import extract_json
+
 
 def create_connection(server, port):
   '''
@@ -19,13 +20,6 @@ def create_connection(server, port):
   return client_socket
 
 
-def close_connection(client_socket):
-  '''
-  Closes the given socket connection
-  '''
-  client_socket.close()
-
-
 def prepare_data(username, password):
   '''
   Prepare JSON data for sending
@@ -33,8 +27,6 @@ def prepare_data(username, password):
   data_dict = {"join": {"username": username, "password": password, "token": ""}}
   
   return json.dumps(data_dict)
-
-
 
 
 def send(server:str, port:int, username:str, password:str, message:str, bio:str=None):
@@ -56,7 +48,7 @@ def send(server:str, port:int, username:str, password:str, message:str, bio:str=
 
     # Prepare the data
     data_to_send = prepare_data(username, password)
-    #print(data_to_send)
+
     
 
     # Send the data
@@ -83,21 +75,19 @@ def send(server:str, port:int, username:str, password:str, message:str, bio:str=
         
         if response_dict["response"]["type"] == "ok":
           token = response_tuple.token
-          #print(token)
           message_msg = json.dumps({"token": token, "post": {"entry": message, "timestamp": str(time.time())}})
           send_stream.write(message_msg + '\r\n')
           send_stream.flush()
 
           if bio:
-            bio_msg = json.dumps({"token": token, "bio": {"entry": message, "timestamp": str(time.time())}})
-            send_stream.write(bio_msg) + '\r\n'
+            bio_msg = json.dumps({"token": token, "bio": {"entry": bio, "timestamp": str(time.time())}})
+            send_stream.write(bio_msg + '\r\n')
             send_stream.flush()
 
           print("Operation was succsessful")
           return True
         
         elif response_dict["response"]["type"] == "error":
-            # You can also log or print the error message if needed
             print(f"Error from server: {response_dict['response']['message']}")
             return False
       
@@ -114,11 +104,9 @@ def send(server:str, port:int, username:str, password:str, message:str, bio:str=
     return False
   
   finally:
-    close_connection(client_socket)
+    client_socket.close()
 
-  # #TODO: return either True or False depending on results of required operation
-  # return 
 
 server = "168.235.86.101" # replace with actual server ip address
 port = 3021 # replace with actual port
-send(server, port, "f21demo", "pwd123", "is this working!")
+send(server, port, "f21demo", "pwd123", "b", "this is my bio")
