@@ -26,23 +26,12 @@ def close_connection(client_socket):
   client_socket.close()
 
 
-def prepare_data(username, password, message=None, bio=None):
+def prepare_data(username, password):
   '''
   Prepare JSON data for sending
   '''
   data_dict = {"join": {"username": username, "password": password, "token": ""}}
   
-  # # checks if there is a message
-  # if message:
-  #   #adds the message
-  #   data_dict["message"] = message
-  
-  # # checks if there is a bio
-  # if bio:
-  #   # adds the bio
-  #   data_dict["bio"] = bio
-  
-  # returns json dump
   return json.dumps(data_dict)
 
 
@@ -66,7 +55,7 @@ def send(server:str, port:int, username:str, password:str, message:str, bio:str=
     recv_stream = client_socket.makefile('r')
 
     # Prepare the data
-    data_to_send = prepare_data(username, password, message, bio)
+    data_to_send = prepare_data(username, password)
     #print(data_to_send)
     
 
@@ -76,34 +65,12 @@ def send(server:str, port:int, username:str, password:str, message:str, bio:str=
 
     # Receive the response
     response = recv_stream.readline()
+    
     response_tuple = extract_json(response)
     
-    token = response_tuple.token
-    #print("Raw response:", response)  # For debugging purposes
 
 
-    # Message
-    if message:
-      post = {
-        "token": token,
-        "post": {
-          "entry": message,
-          "timestamp": time.time()
-        }
-      }
-    
-    post_string = json.dumps(post)
-    # Bio
-    if bio:
-      bio = {
-        "token": token,
-        "bio":{
-          "entry": bio,
-          "timestamp": time.time()
-        }
-      }
-    
-    bio_string = json.dumps(bio)
+
 
     # Process the response
     try:
@@ -115,9 +82,18 @@ def send(server:str, port:int, username:str, password:str, message:str, bio:str=
       if "response" in response_dict:
         
         if response_dict["response"]["type"] == "ok":
+          token = response_tuple.token
+          #print(token)
+          message_msg = json.dumps({"token": token, "post": {"entry": message, "timestamp": str(time.time())}})
+          send_stream.write(message_msg + '\r\n')
+          send_stream.flush()
+
+          if bio:
+            bio_msg = json.dumps({"token": token, "bio": {"entry": message, "timestamp": str(time.time())}})
+            send_stream.write(bio_msg) + '\r\n'
+            send_stream.flush()
+
           print("Operation was succsessful")
-          #response_tuple = extract_json(response)
-          print(response_tuple.message)
           return True
         
         elif response_dict["response"]["type"] == "error":
@@ -145,4 +121,4 @@ def send(server:str, port:int, username:str, password:str, message:str, bio:str=
 
 server = "168.235.86.101" # replace with actual server ip address
 port = 3021 # replace with actual port
-send(server, port, "f21demo", "pwd123", "Hello World!")
+send(server, port, "f21demo", "pwd123", "is this working!")
