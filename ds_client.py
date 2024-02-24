@@ -7,7 +7,7 @@
 # 75948470
 import socket
 import json
-
+from ds_protocol import extract_json
 
 def create_connection(server, port):
   '''
@@ -86,6 +86,8 @@ def send(server:str, port:int, username:str, password:str, message:str, bio:str=
         
         if response_dict["response"]["type"] == "ok":
           print("Operation was succsessful")
+          # response_tuple = extract_json(response)
+          #print(response_tuple.message)
           return True
         
         elif response_dict["response"]["type"] == "error":
@@ -111,4 +113,6 @@ def send(server:str, port:int, username:str, password:str, message:str, bio:str=
   # #TODO: return either True or False depending on results of required operation
   # return 
 
-send("168.235.86.101", 3021, "Aadi", "shank", "hello")
+server = "168.235.86.101" # replace with actual server ip address
+port = 3021 # replace with actual port
+send(server, port, "f21demo", "pwd123", "Hello World!")

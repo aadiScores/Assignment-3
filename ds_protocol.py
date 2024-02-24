@@ -32,3 +32,5 @@ def extract_json(json_msg:str) -> DataTuple:
 
   return DataTuple(join, token, response)
 
+# json_msg = '{"response": {"type": "ok", "message": "Welcome back, f21demo", "token": "5e82abc4-f3b5-45ca-bb57-a7eb76adc2bf"}}'
+# print(extract_json(json_msg))
