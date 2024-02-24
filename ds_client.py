@@ -8,6 +8,7 @@
 import socket
 import json
 from ds_protocol import extract_json
+import time
 
 def create_connection(server, port):
   '''
@@ -31,15 +32,15 @@ def prepare_data(username, password, message=None, bio=None):
   '''
   data_dict = {"join": {"username": username, "password": password, "token": ""}}
   
-  # checks if there is a message
-  if message:
-    #adds the message
-    data_dict["message"] = message
+  # # checks if there is a message
+  # if message:
+  #   #adds the message
+  #   data_dict["message"] = message
   
-  # checks if there is a bio
-  if bio:
-    # adds the bio
-    data_dict["bio"] = bio
+  # # checks if there is a bio
+  # if bio:
+  #   # adds the bio
+  #   data_dict["bio"] = bio
   
   # returns json dump
   return json.dumps(data_dict)
@@ -66,6 +67,8 @@ def send(server:str, port:int, username:str, password:str, message:str, bio:str=
 
     # Prepare the data
     data_to_send = prepare_data(username, password, message, bio)
+    #print(data_to_send)
+    
 
     # Send the data
     send_stream.write(data_to_send + '\r\n')
@@ -73,7 +76,34 @@ def send(server:str, port:int, username:str, password:str, message:str, bio:str=
 
     # Receive the response
     response = recv_stream.readline()
+    response_tuple = extract_json(response)
+    
+    token = response_tuple.token
     #print("Raw response:", response)  # For debugging purposes
+
+
+    # Message
+    if message:
+      post = {
+        "token": token,
+        "post": {
+          "entry": message,
+          "timestamp": time.time()
+        }
+      }
+    
+    post_string = json.dumps(post)
+    # Bio
+    if bio:
+      bio = {
+        "token": token,
+        "bio":{
+          "entry": bio,
+          "timestamp": time.time()
+        }
+      }
+    
+    bio_string = json.dumps(bio)
 
     # Process the response
     try:
@@ -86,8 +116,8 @@ def send(server:str, port:int, username:str, password:str, message:str, bio:str=
         
         if response_dict["response"]["type"] == "ok":
           print("Operation was succsessful")
-          # response_tuple = extract_json(response)
-          #print(response_tuple.message)
+          #response_tuple = extract_json(response)
+          print(response_tuple.message)
           return True
         
         elif response_dict["response"]["type"] == "error":
