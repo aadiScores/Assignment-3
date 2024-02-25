@@ -20,7 +20,7 @@
 from file_organizer import admin_func, load_file, create_new_file, file_search, delete_file, read_file, active_file_path
 from pathlib import Path
 from ds_client import send
-from Profile import Profile
+from Profile import Profile, Post, DsuFileError
 
 def list_options():
     print("")
@@ -45,6 +45,7 @@ def print_menu():
     print("8 - Connect to server.")
     print("Q - Quit")
 
+
 def handle_create():
     """
     Handles the creation of a new DSU file.
@@ -63,6 +64,7 @@ def handle_create():
     
     
     #print(f"DSU file {filename} created in {directory}")
+
 
 def handle_load():
     """
@@ -105,6 +107,7 @@ def handle_list():
     for item in file_list:
         print(item)
 
+
 def enter_admin_mode():
     """
     Enters the admin mode where commands are entered directly.
@@ -112,9 +115,11 @@ def enter_admin_mode():
     print("Entering admin mode. Type 'exit' to return to the main menu.")
     admin_func()
 
+
 def handle_delete_file():
     user_input = input("Please enter the file path you want to remove (NOTE ONLY ABLE TO REMOVE DSU FILES): ")
     delete_file(user_input)
+
 
 def handle_read():
     user_input = input("Enter the directory path with the 'dsu' file: ")
@@ -137,9 +142,79 @@ def handle_post_entry():
     print(profile.dsuserver)
     # Let the user select an entry to post or create a new entry for posting
     entry = input("Enter your journal entry to post: ")
+
+    # Create a new Post object
+    new_post = Post(entry = entry)
+    # Add the new post to the profile
+    profile.add_post(new_post)
+    # Save the profile with the new post
+    try:
+        profile.save_profile(active_file_path)
+        print("Entry added to your journal and ready for posting.")
+    except DsuFileError as e:
+        print(f"Failed to save the profile with the new entry: {e}")
+        return  # Exit if unable to save the profile
+    
     # Use the send function to post the entry
     send(profile.dsuserver, 3021, profile.username, profile.password, entry)
 
+
+def handle_edit_profile():
+    if not active_file_path:
+        print("No profile loaded. Please load a profile first.")
+        return
+    # Load the profile
+    profile = Profile()
+    profile.load_profile(active_file_path)
+
+    print("\nEdit Profile")
+    print("1 - Username")
+    print("2 - Password")
+    print("3 - Bio")
+    print("4 - DSP Server Address")
+    choice = input("Select the information you want to edit: ")
+
+    if choice == '1':
+        new_username = input("Enter new username: ")
+        profile.username = new_username
+    elif choice == '2':
+        new_password = input("Enter new password: ")
+        profile.password = new_password
+    elif choice == '3':
+        new_bio = input("Enter new bio: ")
+        profile.bio = new_bio
+    elif choice == '4':
+        new_server = input("Enter new DSP Server Address: ")
+        profile.dsuserver = new_server
+    else:
+        print("Invalid choice.")
+        return
+
+    # Save the updated profile
+    try:
+        profile.save_profile(active_file_path)
+        print("Profile updated successfully.")
+    except DsuFileError as e:
+        print(f"Failed to save the updated profile: {e}")
+
+
+def handle_print_profile():
+    if not active_file_path:
+        print("No profile loaded. Please load a profile first.")
+        return
+    # Load the profile
+    profile = Profile()
+    profile.load_profile(active_file_path)
+
+    print("\nProfile Information")
+    print(f"Username: {profile.username}")
+    # Consider security implications of printing the password. Maybe just indicate if it's set.
+    print("Password: [HIDDEN]")
+    print(f"Bio: {profile.bio}")
+    print(f"DSP Server Address: {profile.dsuserver}")
+    print("Posts:")
+    for idx, post in enumerate(profile.get_posts()):
+        print(f"{idx + 1}: {post.entry}")
 
 
 def ui_run():
@@ -160,6 +235,10 @@ def ui_run():
             handle_delete_file()
         elif choice == '5':
             handle_read()
+        elif choice == '6':
+            handle_edit_profile()
+        elif choice == '7':
+            handle_print_profile()
         elif choice == '8':
             handle_post_entry()
         elif choice.lower() == 'admin':
