@@ -6,7 +6,7 @@
 
 from pathlib import Path
 from Profile import Profile, DsuProfileError, DsuFileError, Post
-
+# from ds_client import send
 
 active_file_path = None
 
@@ -30,7 +30,7 @@ def file_search(directory, recursive=False, files_only=False, specific_file=None
                 file_list.append(child)
     return file_list
 
-def create_new_file(directory, filename):
+def create_new_file(dsuserver, directory, filename):
     full_file_name = f"{filename}.dsu"
     file_path = Path(directory) / full_file_name
     truefile_path = file_path
@@ -42,7 +42,7 @@ def create_new_file(directory, filename):
     bio = input("Enter Bio: ")
     
     #create a profile
-    profile = Profile(username=username, password=password)
+    profile = Profile(dsuserver, username=username, password=password)
     profile.bio = bio
     #create the file
     try:
@@ -149,6 +149,7 @@ def edit_profile(options):
     except (DsuFileError, DsuProfileError) as e:
         print(f"Failed to edit profile: {e}")
 
+
 def print_profile_data(option, profile):
     if option == "-usr":
         print(f"Username: {profile.username}")
@@ -178,6 +179,7 @@ def print_profile_data(option, profile):
         for idx, post in enumerate(profile.get_posts()):
             print(f"Post ID {idx}: {post.entry}")
 
+
 def delete_file(file_path):
     # store path to variable
     path = Path(file_path)
@@ -190,9 +192,11 @@ def delete_file(file_path):
     else:
         print('ERROR')
 
+
 def read_file(file_path):
     # store path to variable
     path = Path(file_path)
+    
     # check if file has a .dsu suffix/extension
     if path.exists() and path.suffix == '.dsu':
         # open and read the file
@@ -204,6 +208,7 @@ def read_file(file_path):
                 print("EMPTY")
     else:
         print("ERROR")
+
 
 def admin_func():
     global active_file_path

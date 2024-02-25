@@ -17,8 +17,10 @@
 # Import your main functions from a2 module.
 # Adjust these imports based on your actual file structure and function names.
 
-from file_organizer import admin_func, load_file, create_new_file, file_search, delete_file, read_file
+from file_organizer import admin_func, load_file, create_new_file, file_search, delete_file, read_file, active_file_path
 from pathlib import Path
+from ds_client import send
+from Profile import Profile
 
 def list_options():
     print("")
@@ -33,13 +35,14 @@ def print_menu():
     Prints the main menu options to the console.
     """
     print("\nDSU File Manager")
-    print("1 - Create a new DSU file")
+    print("1 - Create a new DSU file") 
     print("2 - Load an existing DSU file")
     print("3 - List the contents of the user specified directory.")
     print("4 - Delete File.")
     print("5 - Read the contents of a file.")
     print("6 - Edit profile.")
     print("7 - Print profile.")
+    print("8 - Connect to server.")
     print("Q - Quit")
 
 def handle_create():
@@ -49,7 +52,16 @@ def handle_create():
     global active_file_path
     directory = input("Enter the directory path to create the DSU file: ")
     filename = input("Enter the DSU filename: ")
-    active_file_path = create_new_file(directory, filename)
+    choice = input("Would you like to connect to a server(type y or n)? ")
+    
+    if choice.lower() == 'y':
+        server = input("Enter the desire server you would like to connect to: ")
+        active_file_path = create_new_file(server, directory, filename)
+    else:
+        server = None
+        active_file_path = create_new_file(server, directory, filename)
+    
+    
     #print(f"DSU file {filename} created in {directory}")
 
 def handle_load():
@@ -60,6 +72,7 @@ def handle_load():
     filepath = input("Enter the path of the DSU file to load: ")
     active_file_path = load_file(filepath)
     #print(f"DSU file {filepath} loaded")
+
 
 def handle_list():
     '''
@@ -108,6 +121,26 @@ def handle_read():
     read_file(user_input)
 
 
+def handle_post_entry():
+    if not active_file_path:
+        print("No profile loaded. Please load a profile first.")
+        return
+    # Load the profile
+    profile = Profile()
+    profile.load_profile(active_file_path)
+
+    
+    if profile.dsuserver == None:
+        server_input = input("Please enter your desired server id: ")
+        profile.dsuserver = server_input
+
+    print(profile.dsuserver)
+    # Let the user select an entry to post or create a new entry for posting
+    entry = input("Enter your journal entry to post: ")
+    # Use the send function to post the entry
+    send(profile.dsuserver, 3021, profile.username, profile.password, entry)
+
+
 
 def ui_run():
     """
@@ -127,6 +160,8 @@ def ui_run():
             handle_delete_file()
         elif choice == '5':
             handle_read()
+        elif choice == '8':
+            handle_post_entry()
         elif choice.lower() == 'admin':
             enter_admin_mode()
         elif choice == 'q':

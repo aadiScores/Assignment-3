@@ -40,6 +40,7 @@ def send(server:str, port:int, username:str, password:str, message:str, bio:str=
   :param message: The message to be sent to the server.
   :param bio: Optional, a bio for the user.
   '''
+  client_socket = None
   try:
     # Establish Connection
     client_socket = create_connection(server, port)
@@ -48,7 +49,7 @@ def send(server:str, port:int, username:str, password:str, message:str, bio:str=
 
     # Prepare the data
     data_to_send = prepare_data(username, password)
-
+    
     
 
     # Send the data
@@ -57,11 +58,11 @@ def send(server:str, port:int, username:str, password:str, message:str, bio:str=
 
     # Receive the response
     response = recv_stream.readline()
-    
+    # print(response)
     response_tuple = extract_json(response)
     
 
-
+    
 
 
     # Process the response
@@ -104,9 +105,10 @@ def send(server:str, port:int, username:str, password:str, message:str, bio:str=
     return False
   
   finally:
-    client_socket.close()
+    if client_socket is not None:
+      client_socket.close()
 
 
-server = "168.235.86.101" # replace with actual server ip address
-port = 3021 # replace with actual port
-send(server, port, "f21demo", "pwd123", "b", "this is my bio")
+# server = "168.235.86.101" # replace with actual server ip address
+# port = 3021 # replace with actual port
+# send(server, port, "askdnkajsnd", "helloilikethispassword", "Hello World!")
